@@ -1,0 +1,63 @@
+$ cat lokii.yaml
+loki:
+  config:
+    schema_config:
+      configs:
+        - from: 2020-10-24
+          store: boltdb-shipper
+          object_store: azure
+          schema: v11
+          index:
+            prefix: loki_index_
+            period: 24h
+    storage_config:
+      azure:
+        account_name: ""
+        account_key: ""
+        container_name: "loki-data"
+    limits_config:
+      retention_period: 72h
+
+replicaCount: 1
+
+serviceAccount:
+  create: true
+  name: loki
+
+rbac:
+  create: true
+
+service:
+  type: ClusterIP
+  port: 3100
+
+persistence:
+  enabled: false # Disabled as we're using Azure Blob Storage
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 3100
+  initialDelaySeconds: 5
+  timeoutSeconds: 3
+
+livenessProbe:
+  httpGet:
+    path: /ready
+    port: 3100
+  initialDelaySeconds: 5
+  timeoutSeconds: 3
+
+
+helm install loki Grafana/loki-stack -f lokii.yaml
+
+
+
